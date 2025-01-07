@@ -1,0 +1,237 @@
+START
+
+DISPLAY "PROGRAM LEASING / KREDIT MOTOR"
+DISPLAY "24.240.0050 | Viki Zulfathan"
+DISPLAY "===================================================="
+DISPLAY "--------- SELAMAT DATANG DI NSC FINANCE ------------"
+DISPLAY "===================================================="
+DISPLAY available motorbike options with prices (1-6)
+
+SET isRunning = true
+
+WHILE isRunning is true DO
+    CALL showMenu()
+
+END
+
+FUNCTION showMenu()
+    DISPLAY "===================================================="
+    DISPLAY "----------------------- MENU -----------------------"
+    DISPLAY "===================================================="
+    DISPLAY options:
+        1. Lihat Data Pelanggan
+        2. Tambah Data Pelanggan
+        3. Edit Data Pelanggan
+        4. Hapus Data Pelanggan
+        5. Keluar
+
+    READ selectedMenu (user input for menu option)
+
+    SWITCH selectedMenu TO:
+        CASE 1: 
+            CALL showAllPelanggan()
+        CASE 2: 
+            CALL inputPelanggan()
+        CASE 3: 
+            CALL editPelanggan()
+        CASE 4: 
+            CALL deletePelanggan()
+        CASE 5: 
+            SET isRunning = false
+            DISPLAY "Program dihentikan. Terima kasih!"
+        DEFAULT:
+            DISPLAY "Menu tidak valid!"
+
+END FUNCTION
+
+FUNCTION showAllPelanggan()
+    SET scanner = new Scanner(System.in)
+    SET page = 1
+    SET recordsPerPage = 3
+    SET totalPages = ceil(nikCustomer.size() / recordsPerPage)
+
+    WHILE user has not pressed 'k' to exit DO
+        DISPLAY "LAPORAN LEASING NSC FINANCE"
+        DISPLAY "DATA PELANGGAN - Halaman " + page
+
+        IF nikCustomer is empty THEN
+            DISPLAY "Data Pelanggan Tidak tersedia!"
+            RETURN
+
+        DISPLAY customer data with pagination in tabular format
+
+        FOR i = start to end DO
+            SET angsuranperbulan = angsuran[i]
+            SET totalHarga = hargaPokok[i] - jumlahDp[i]
+            SET perBulan = totalHarga / angsuran[i]
+            SET totalAngsuran = perBulan + perBulan * totalBunga[i]
+            SET totalDp = jumlahDp[i]
+
+            DISPLAY customer details in formatted table:
+                nikCustomer[i], namaCustomer[i], alamatCustomer[i], motor name, hargaPokok[i], angsuran[i], totalBunga[i], jumlahDp[i], totalHarga, totalAngsuran
+
+        DISPLAY page summary and total angsuran
+
+        DISPLAY navigation options:
+            'n' for next page
+            'b' for previous page
+            'k' for exit
+
+        READ user input for navigation:
+            IF input is 'n' AND page < totalPages THEN
+                INCREMENT page
+            ELSE IF input is 'b' AND page > 1 THEN
+                DECREMENT page
+            ELSE IF input is 'k' THEN
+                BREAK the loop
+            ELSE
+                DISPLAY "Input tidak valid. Silakan coba lagi."
+
+END FUNCTION
+
+FUNCTION inputPelanggan()
+    SET berjalan = true
+
+    WHILE berjalan is true DO
+        DISPLAY "===================================================="
+        DISPLAY "------------------- TAMBAH DATA --------------------"
+        DISPLAY "===================================================="
+
+        READ NIK Customer
+        READ Nama Customer
+        READ Alamat Customer
+        READ Kode Motor [1..6]
+
+        SET harga = CALL getHarga(kode)
+
+        READ Uang Muka (down payment)
+        SET totalHargaVal = harga - dp
+        READ Berapa lama angsuran per bulan
+
+        SET bunga = 0
+        IF angsur <= 12 THEN
+            SET bunga = 0.05 * 1
+        ELSE IF angsur <= 24 THEN
+            SET bunga = 0.05 * 2
+        ELSE IF angsur > 24 THEN
+            SET bunga = 0.05 * 3
+
+        SET totalAngsuranVal = totalHargaVal / angsur + bunga
+
+        ADD NIK, Nama, Alamat, Kode Motor, Harga Pokok, Angsuran, Total Harga, Uang Muka, Bunga, Total Angsuran to corresponding lists:
+            nikCustomer.add(nomor)
+            namaCustomer.add(nama)
+            alamatCustomer.add(alamat)
+            kodeMotor.add(kode)
+            hargaPokok.add(harga)
+            angsuran.add(angsur)
+            totalHarga.add(totalHargaVal)
+            jumlahDp.add(dp)
+            totalBunga.add(bunga)
+            totalAngsuran.add(totalAngsuranVal)
+
+        DISPLAY "Data berhasil ditambahkan ke database!"
+        READ choice ('y' or 't')
+        IF choice is 't' THEN
+            SET berjalan = false
+
+END FUNCTION
+
+FUNCTION editPelanggan()
+    CALL showAllPelanggan()
+    DISPLAY "Pilih nomor pelanggan yang ingin di-edit"
+    READ index (selected customer)
+
+    IF index >= 0 AND index < nikCustomer.size() THEN
+        DISPLAY "===================================================="
+        DISPLAY "-------------------- EDIT DATA ---------------------"
+        DISPLAY "===================================================="
+
+        READ new NIK
+        READ new Nama Customer
+        READ new Alamat Customer
+        READ new Kode Motor [1..6]
+
+        SET kode = user input
+        SET hargaPokok[index] = CALL getHarga(kode)
+
+        READ new Uang Muka
+        SET totalHargaVal = hargaPokok[index] - dp
+        SET jumlahDp[index] = dp
+
+        READ new Berapa lama angsuran per bulan
+
+        SET bunga = 0
+        IF angsur <= 12 THEN
+            SET bunga = 0.10 * 1
+        ELSE IF angsur <= 24 THEN
+            SET bunga = 0.10 * 2
+        ELSE IF angsur > 24 THEN
+            SET bunga = 0.10 * 3
+
+        SET totalBunga[index] = bunga
+        SET totalAngsuranVal = totalHargaVal / angsur + bunga
+
+        SET angsuran[index] = angsur
+        SET totalHarga[index] = totalHargaVal
+        SET totalAngsuran[index] = totalAngsuranVal
+
+        DISPLAY "Data berhasil diubah!"
+    ELSE
+        DISPLAY "Data tidak ada dalam database!"
+
+END FUNCTION
+
+FUNCTION deletePelanggan()
+    DISPLAY "===================================================="
+    DISPLAY "--------------------- HAPUS DATA -------------------"
+    DISPLAY "===================================================="
+
+    CALL showAllPelanggan()
+    DISPLAY "Pilih nomor pelanggan yang ingin dihapus"
+    READ index (selected customer)
+
+    IF index >= 0 AND index < nikCustomer.size() THEN
+        REMOVE customer data from all lists:
+            nikCustomer.remove(index)
+            namaCustomer.remove(index)
+            alamatCustomer.remove(index)
+            kodeMotor.remove(index)
+            hargaPokok.remove(index)
+            totalBunga.remove(index)
+            angsuran.remove(index)
+            totalHarga.remove(index)
+            jumlahDp.remove(index)
+            totalAngsuran.remove(index)
+
+        DISPLAY "Data berhasil dihapus!"
+    ELSE
+        DISPLAY "Data tidak ada dalam database!"
+
+END FUNCTION
+
+FUNCTION getHarga(kode)
+    SWITCH kode TO:
+        CASE 1: RETURN 19000000
+        CASE 2: RETURN 27000000
+        CASE 3: RETURN 30000000
+        CASE 4: RETURN 28000000
+        CASE 5: RETURN 28500000
+        CASE 6: RETURN 38000000
+        DEFAULT: RETURN 0
+
+END FUNCTION
+
+FUNCTION getMotor(kode)
+    SWITCH kode TO:
+        CASE 1: RETURN "BeAT STREET"
+        CASE 2: RETURN "ALL NEW VARIO 160 CBS"
+        CASE 3: RETURN "ALL NEW VARIO 160 ABS"
+        CASE 4: RETURN "AEROX STANDAR"
+        CASE 5: RETURN "AEROX CYBER CITY"
+        CASE 6: RETURN "XSR 155"
+        DEFAULT: RETURN "Data Tidak Tersedia!"
+
+END FUNCTION
+
+END
